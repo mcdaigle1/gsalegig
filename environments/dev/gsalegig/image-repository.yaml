@@ -4,6 +4,6 @@ metadata:
   name: gsalegig-api
   namespace: flux-system
 spec:
-  image: 450287579526.dkr.ecr.us-west-1.amazonaws.com/gsalegig-api
+  image: 450287579526.dkr.ecr.us-west-1.amazonaws.com/dev/gsalegig-api
   interval: 1m
   provider: aws

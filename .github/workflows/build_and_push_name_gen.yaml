@@ -2,10 +2,10 @@ name: Build and Push Name Generator to ECR
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:                  # files that the action watches
-      - services/name-generator/**
+  # push:
+  #   branches: [main]
+  #   paths:                  # files that the action watches
+  #     - services/name-generator/**
 
 permissions:
   id-token: write
