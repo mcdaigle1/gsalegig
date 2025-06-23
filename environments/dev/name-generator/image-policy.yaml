@@ -1,0 +1,15 @@
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  annotations:
+    image.toolkit.fluxcd.io/write-image-ref: "false"
+  name: name-generator
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: name-generator
+  policy:
+    numerical:
+      order: asc
+  filterTags:
+    pattern: '^[0-9]{14}$' 

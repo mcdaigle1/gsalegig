@@ -1,0 +1,16 @@
+# apiVersion: networking.k8s.io/v1
+# kind: NetworkPolicy
+# metadata:
+#   name: allow-name-generator-to-mongo
+#   namespace: dev
+# spec:
+#   podSelector:
+#     matchLabels:
+#       app: name-generator-mongodb  # selects MongoDB pods
+#   policyTypes:
+#     - Ingress
+#   ingress:
+#     - from:
+#         - podSelector:
+#             matchLabels:
+#               app: name-generator-webapp  # only allow pods labeled app: name-generator-webapp

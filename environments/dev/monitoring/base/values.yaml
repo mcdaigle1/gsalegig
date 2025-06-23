@@ -1,0 +1,33 @@
+# Enables Prometheus and selects only your custom ServiceMonitors
+prometheus:
+  prometheusSpec:
+    serviceMonitorSelector:
+      matchLabels:
+        release: prometheus
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: true
+    scrapeInterval: 15s
+    evaluationInterval: 15s
+  service:
+    type: ClusterIP
+
+# Enables node-level metrics
+prometheus-node-exporter:
+  enabled: true
+
+# Enables Kubernetes object state metrics
+kube-state-metrics:
+  enabled: true
+
+# Disables Alertmanager for simplicity
+alertmanager:
+  enabled: false
+
+# Disables Pushgateway (not needed unless you push custom metrics manually)
+prometheus-pushgateway:
+  enabled: false
+
+# Disable Grafana (you can install it separately if desired)
+grafana:
+  enabled: false

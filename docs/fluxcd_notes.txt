@@ -1,0 +1,269 @@
+##################################################################
+# ABOUT FLUX
+##################################################################
+
+# what is a flux CRD?
+# A Flux CRD (Custom Resource Definition) is a Kubernetes extension that defines new resource 
+# types FluxCD needs to operate. These are not built into Kubernetes by default — they’re installed 
+# by Flux and let you declare GitOps configuration like:
+
+CRD Kind                    Purpose                
+GitRepository               Defines a Git source to pull manifests from
+Kustomization               Defines how/when to apply a folder of manifests (like kustomize build)
+ImageRepository             Monitors a container registry for image tags
+ImagePolicy                 Selects the latest image matching certain rules (e.g. semver, SHA)
+ImageUpdateAutomation       Automates commits to your Git repo when new images are available
+HelmRelease                 Manages Helm chart releases via Git
+HelmRepository              References remote Helm repos
+Alert, Provider, Receiver   Used for notifications (Slack, Webhooks, etc.)
+
+##################################################################
+# PROJECT DIRECTORY STRUCTURE
+##################################################################
+
+clusters
+    dev
+        kustomization.yaml
+        flux-system
+            gotk-components.yaml
+            gotk-sync.yaml
+            kustomization.yaml
+environments
+    dev
+        gsalegig-api
+            image-policy.yaml
+            image-repository.yaml
+            nginx-release.yaml 
+            image-release.yaml
+            image-update-automation.yaml
+            namespace.yaml
+            nginx-repository.yaml
+            values.yaml
+            kustomization.yaml
+        name-generator
+            image-policy.yaml
+            image-release.yaml
+            image-repository.yaml
+            image-update-automation.yaml
+            kustomization.yaml		
+            values.yaml
+        kustomization.yaml	 
+services
+    gsalegig-api
+        app
+            <application code and Dockerfile>
+        helm
+            Chart.yaml
+            charts
+            templates
+                deployment.yaml
+                ingress.yaml
+                service.yaml
+    name-generator
+        app
+            <application code and Dockerfile>
+        helm
+            Chart.yaml
+            charts
+            templates
+                deployment.yaml
+                service.yaml
+
+##################################################################
+# COMMANDS
+##################################################################
+
+# install fluxcd locally
+brew install fluxcd/tap/flux
+
+export GITHUB_TOKEN=<get_fluxcd_git_pat_from_lastpass>
+export GITHUB_USER=mcdaigle1
+
+flux bootstrap github \
+  --owner=mcdaigle1 \
+  --repository=gsalegig \
+  --branch=main \
+  --path=clusters/dev \
+  --personal \
+  --version=v2.6.1 \
+  --components-extra=image-reflector-controller,image-automation-controller \
+  --force (optional)
+
+
+  flux install
+
+  1.	Watch your ECR repo for new images via an ImageRepository
+	2.	Select the latest SHA-tagged image via an ImagePolicy
+	3.	Patch your HelmRelease with the new image tag via ImageUpdateAutomation
+
+Assumptions
+	•	App image is pushed to:
+             123456789012.dkr.ecr.us-west-2.amazonaws.com/myapp:<sha>
+	•	Helm chart is already deployed using a HelmRelease like:
+
+image:
+  repository: 123456789012.dkr.ecr.us-west-2.amazonaws.com/myapp
+  tag: abcdef1  # <- this will be updated automatically
+
+# check on flux pods
+kubectl get pods -n flux-system
+
+# check logs on kustomize controller
+kubectl logs -n flux-system deploy/kustomize-controller
+
+# check all installed resources
+kubectl get pods -n flux-system
+kubectl get all -n flux-system
+kubectl get gitrepositories -A
+kubectl get kustomizations -A
+
+flux get kustomizations
+flux get sources git
+
+# see all flux logs
+flux logs --all-namespaces
+
+# tail all FluxCD logs across all components
+kubectl logs -n flux-system -l app.kubernetes.io/part-of=flux --all-containers=true --follow
+
+# Check on 
+# •	Discovery of new image tags (ImageRepository)
+#	•	Updating Git with new image tags (ImageUpdateAutomation)
+#     - Image automation controller:
+            kubectl logs -n flux-system deployment/image-automation-controller -f
+#     - Image reflector controller:
+            kubectl logs -n flux-system deployment/image-reflector-controller -f
+
+# check currrent image state
+flux get images repository
+flux get images update
+
+# Check if the Kustomization Was Reapplied
+flux get kustomizations
+# Look for a recent Applied revision: and timestamp.
+
+ # Inspect Git Commits
+ git log -p
+ # You’ll see changes like:
+ #    image:
+ #      tag: v1.2.3  # updated by Flux
+
+# force file reconcile
+flux reconcile source git flux-system -n flux-system
+flux reconcile kustomization flux-system -n flux-system --with-source
+
+flux reconcile helmrelease 
+
+flux reconcile image repository your-repo-name -n flux-system
+flux reconcile image policy your-policy-name -n flux-system
+
+flux reconcile image update your-automation-name -n flux-system
+kubectl logs -n flux-system deploy/image-automation-controller
+
+# patch to remove HelmRelease finalizers (to allow removal)
+kubectl patch helmrelease gsalegig-release -n dev --type=json -p='[{"op": "remove", "path": "/metadata/finalizers"}]'
+
+# find kusomtizations to get values for next command
+get kustomizations.kustomize.toolkit.fluxcd.io -A
+# patch kustomization
+kubectl patch kustomization flux-system -n flux-system --type=json -p='[{"op": "remove", "path": "/metadata/finalizers"}]'
+
+# remove finalizers on namespace
+kubectl get namespace flux-system -o json > flux-system-ns.json
+# edit flux-system-ns.json and clear finalizers list
+kubectl replace --raw "/api/v1/namespaces/flux-system/finalize" -f ./flux-system-ns.json
+
+# big hammer
+# in one terminal start kubectl proxy
+kubectl proxy &
+# in another terminal run:
+curl -X DELETE http://127.0.0.1:8001/apis/source.toolkit.fluxcd.io/v1/namespaces/flux-system/helmcharts/dev-ingress-nginx
+curl -X DELETE http://127.0.0.1:8001/apis/source.toolkit.fluxcd.io/v1/namespaces/flux-system/helmcharts/dev-gsalegig-release
+curl -X DELETE http://127.0.0.1:8001/apis/source.toolkit.fluxcd.io/v1/namespaces/flux-system/helmcharts/dev-name-generator-release
+
+kubectl delete crd helmcharts.source.toolkit.fluxcd.io --grace-period=0 --force
+
+######################################################################
+# get all installed controllers
+kubectl get deployments -n flux-system
+NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
+helm-controller           1/1     1            1           24m
+kustomize-controller      1/1     1            1           24m
+notification-controller   1/1     1            1           24m
+source-controller         1/1     1            1           24m
+
+######################################################################
+# Kustomization resource
+# In FluxCD, a Kustomization is a custom Kubernetes resource that tells Flux:
+          “Apply everything under this path from my Git repository into the cluster, at this interval.”
+# Think of it as a declarative “sync loop” definition.
+
+# look at all kustomizations for errors
+kubectl get kustomizations -A
+
+kubectl get kustomization flux-system -n flux-system -o yaml
+kubectl edit kustomization flux-system -n flux-system
+
+flux build kustomization flux-system --namespace=flux-system
+
+######################################################################
+# Image scanning
+kubectl describe imagepolicy gsalegig-api -n flux-system
+
+##################################################################
+# FLUX RECONCILE
+##################################################################
+# run flux reconcile when you want to:
+#	1.	Force it to run immediately (instead of waiting for the next interval)
+#	2.	Manually trigger the loop right after making a change in Git or pushing a new image
+#	3.	Debug or test the system (e.g., simulate an image bump)
+
+##################################################################
+# REMOVE FLUX COMPLETELY
+##################################################################
+
+  # 1. Delete All Flux CRs (Custom Resources)
+  # This clears out Flux-managed config:
+
+  kubectl delete kustomizations.kustomize.toolkit.fluxcd.io --all --all-namespaces
+  kubectl delete gitrepositories.source.toolkit.fluxcd.io --all --all-namespaces
+  kubectl delete imagerepositories.image.toolkit.fluxcd.io --all --all-namespaces
+  kubectl delete imagepolicies.image.toolkit.fluxcd.io --all --all-namespaces
+  kubectl delete imageupdateautomations.image.toolkit.fluxcd.io --all --all-namespaces
+  kubectl delete helmreleases.helm.toolkit.fluxcd.io --all --all-namespaces
+  kubectl delete helmrepositories.source.toolkit.fluxcd.io --all --all-namespaces
+  kubectl delete alerts.notification.toolkit.fluxcd.io --all --all-namespaces
+  kubectl delete providers.notification.toolkit.fluxcd.io --all --all-namespaces
+  kubectl delete receivers.notification.toolkit.fluxcd.io --all --all-namespaces
+
+  # error?
+  kubectl delete crd helmcharts.source.toolkit.fluxcd.io --grace-period=0 --force
+
+  # 2. Delete the Flux Namespace
+  kubectl delete namespace flux-system
+
+  # 3. Delete Remaining CRDs (Flux adds ~15+)
+  kubectl get crds | grep '\.toolkit\.fluxcd\.io' | awk '{print $1}' | xargs kubectl delete crd
+
+  # Double-check with:
+  kubectl get crds | grep fluxcd
+
+  # 4. Delete Helm Repos (Optional)
+  If you added Flux-related repos via Helm:
+
+  helm repo remove fluxcd
+  helm repo remove fluxcd-community
+
+# Confirm its clean
+kubectl get all -A | grep flux
+kubectl get crds | grep flux
+# Both should return nothing if the cleanup was successful.
+
+
+########################################################
+# MISC
+########################################################
+flux suspend helmrelease gsalegig-release -n dev
+flux resume helmrelease gsalegig-release -n dev
+
+helm uninstall gsalegig-api -n dev

@@ -1,0 +1,23 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: name-generator-release
+  namespace: dev
+spec:
+  releaseName: name-generator
+  targetNamespace: dev
+  interval: 1m
+  chart:
+    spec:
+      chart: services/name-generator/helm
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+        namespace: flux-system
+  values:
+    image:
+      repository: 450287579526.dkr.ecr.us-west-1.amazonaws.com/name-generator-ecr
+      tag: 450287579526.dkr.ecr.us-west-1.amazonaws.com/name-generator-ecr:20250617012334 # {"$imagepolicy": "flux-system:name-generator"}
+    service:
+      type: LoadBalancer
+      port: 80

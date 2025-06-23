@@ -1,0 +1,108 @@
+
+# Install python 3
+
+# Install Flask
+	pip3 install Flask SQLAlchemy Flask-Migrate
+
+	
+# Terraform
+	terraform init
+	terraform apply
+	
+# Kubernetes
+	# with aws sso profile (using aws command alias with --profile built in):
+		 aws eks update-kubeconfig --region us-west-1 --name gsalegig_eks_cluster
+
+	# the first time, set up kubernetes config
+		export KUBE_EDITOR=vim
+		
+		kubectl config get-contexts
+		kubectl config use-context arn:aws:eks:us-east-1:450287579526:cluster/my-eks-cluster
+		
+		kubectl apply -f manifest.yaml
+		
+	# Force deployment restart (and pull of docker image)
+		kubectl rollout restart deployment hello-world-webapp
+		
+		kubectl get services
+		kubectl get pods
+		kubectl logs <pod_name>
+		
+# Nginx (helm)	
+	# delete nginx ingress
+	helm uninstall hello-world --namespace hello-world-namespace
+	
+	# To check if the Ingress controller pod is running correctly, use the following command:
+    kubectl get pods --namespace ingress-nginx
+	
+	# You can watch the status by running 
+	kubectl get service --namespace hello-world-namespace ingress-nginx-controller --output wide --watch
+	
+	# The command below will let you check if the NGINX Ingress controller has a public IP address already assigned to it.
+    kubectl get service ingress-nginx-controller -n hello-world-namespace
+    
+    # DNS I set up:
+    	helloworld.sexycynic.com
+    
+    # apply the ingress config
+    kubectl apply -f hello-world-ingress.yaml
+    
+    # view nginx logs
+    kubectl logs -n hello-world-namespace -l app.kubernetes.io/name=ingress-nginx
+    
+    # For more info on configuring services to talk to each other in nginx, see:
+    https://spacelift.io/blog/kubernetes-ingress
+	
+# Using Helm
+	# create application scaffolding
+	helm create hello_world
+	helm create name_generator
+	
+	# (DEPRECATED: REPLACED WITH gsalegig-RELEASE)
+	# install hello world service
+    # helm upgrade --install hello-world-release hello-world/helm/ \
+    #     --namespace dev --create-namespace \
+    #     -f hello-world/helm/values-dev.yaml \
+    #     --set image.tag=LATEST
+    # helm uninstall hello-world-release -n dev
+
+	# install gsalegig service
+    helm upgrade --install gsalegig-release gsalegig-api/helm/ \
+        --namespace dev --create-namespace \
+        -f gsalegig-api/helm/values-dev.yaml 
+    helm uninstallgsalegig-release -n dev
+    
+    # install name generator service
+    helm upgrade --install name-generator-release name-generator/helm/ \
+        --namespace dev --create-namespace \
+        -f name-generator/helm/values-dev.yaml
+    helm uninstall name-generator-release -n dev
+	
+	# (DEPRECATED: DONE IN TERRAFORM NOW)
+	# install hello-world ingress 
+    helm upgrade --install hello-world ingress-nginx \
+      --repo https://kubernetes.github.io/ingress-nginx \
+      --namespace dev \
+      --create-namespace \
+      --set controller.service.type=LoadBalancer
+	kubectl apply -f hello_world/ingress.yaml -n dev
+	
+    helm uninstall hello-world --namespace dev
+	
+	# usefull commands
+	helm list --all-namespaces
+	helm get all hello-world-release --namespace aaa-dev
+	kubectl rollout status deployment/hello-world-ingress -n aaa-dev
+	kubectl get svc -n aaa-dev --watch
+	
+	# delete nginx ingress
+	helm uninstall hello-world-release
+	
+# Utilities
+	# show tabs in file
+	sed $'s/\t/[TAB]/g' manifest.yaml
+	
+	
+	
+		
+	

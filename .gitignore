@@ -1,0 +1,133 @@
+######################################################
+# Helm chart build output
+######################################################
+charts/
+*.tgz
+
+# Temporary files from Helm lint, package, or templates
+tmpcharts/
+output/
+
+# Helm local cache (optional, usually not present in project dir)
+.helm/
+
+# Ignore override or environment-specific values (if not meant for version control)
+values*.local.yaml
+secrets*.yaml
+
+######################################################
+# Eclipse project files
+######################################################
+.classpath
+.project
+.settings/
+
+# Build output
+bin/
+target/
+
+# Java backup and temp files
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*.DS_Store
+
+# Maven output (if used)
+.mvn/
+!**/src/**/.keep
+target/
+
+# Gradle output (if used)
+.gradle/
+build/
+
+# Eclipse working sets
+.metadata/
+
+######################################################
+# Git temporary files and patches
+######################################################
+*.orig
+*.rej
+*.patch
+
+# Git merge/rebase/commit helpers
+.git/index.lock
+.git/ORIG_HEAD
+.git/logs/
+.gitignore.lock
+.gitmodules.lock
+
+# Git stash and merge backups
+*.bak
+*.backup
+*.swp
+*.swo
+
+# Git hooks that shouldn't be versioned (optional)
+.git/hooks/
+
+# Exclude local Git configuration (optional)
+.git/config.local
+
+######################################################
+# PyDev / Eclipse project config
+######################################################
+.pydevproject
+.project
+.settings/
+
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments (adjust path as needed)
+env/
+venv/
+*.egg-info/
+
+# Editor-specific temp files
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+######################################################
+# macOS system files
+######################################################
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon?
+Icon
+
+# Thumbnails
+._*
+
+# Files that store folder custom view settings
+.Spotlight-V100
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.fseventsd
+
+# Disk images and metadata
+*.dmg
+*.sparseimage
+
+# macOS system temp files
+*.swp
+*.lock
+*.tmp
+
+######################################################
+# vs code directories
+######################################################
+.vscode/

@@ -1,0 +1,37 @@
+# Basic app configuration
+replicaCount: 2
+image:
+  repository: "450287579526.dkr.ecr.us-west-1.amazonaws.com/gsalegig-api"
+  project: "aaa"
+  tag: 450287579526.dkr.ecr.us-west-1.amazonaws.com/gsalegig-api:20250611172639 # {"$imagepolicy": "flux-system:gsalegig-api"}
+  pullPolicy: Always
+# Service configuration
+service:
+  type: LoadBalancer
+  port: 80
+# Ingress configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+# Liveness and readiness probes
+livenessProbe:
+  enabled: true
+  path: /
+  port: http
+readinessProbe:
+  enabled: true
+  path: /
+  port: http
+# Node selector, tolerations, and affinity (optional advanced settings)
+nodeSelector: {}
+tolerations: []
+affinity: {}

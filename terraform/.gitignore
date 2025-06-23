@@ -1,0 +1,28 @@
+######################################################
+# Local .terraform directories (Terraform state & provider plugins)
+######################################################
+.terraform/
+
+# Terraform plan and state files
+*.tfstate
+*.tfstate.backup
+
+# Crash logs
+crash.log
+
+# Terraform variable files (can contain secrets)
+*.tfvars
+*.tfvars.json
+
+# Override files (often used for local config)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI configuration file
+.terraformrc
+terraform.rc
+
+# Provider plugin logs (if TF_LOG is enabled)
+terraform.log

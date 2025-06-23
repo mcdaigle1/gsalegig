@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: prometheus-node-exporter
+  namespace: monitoring
+  labels:
+    release: prometheus  # Must match Prometheus' .spec.serviceMonitorSelector.matchLabels
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: node-exporter  # Must match your Service labels
+  namespaceSelector:
+    matchNames:
+      - monitoring  # Namespace where node-exporter is deployed
+  endpoints:
+    - port: http-metrics   # Must match the port name in the Service
+      path: /metrics
+      interval: 15s

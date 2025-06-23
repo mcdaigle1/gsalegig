@@ -1,0 +1,28 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: name-generator-webapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+     app: name-generator-webapp
+  template:
+    metadata:
+      labels:
+        app: name-generator-webapp
+    spec:
+      containers:
+        - name: name-generator-webapp-container
+          image: {{ .Values.image.tag }}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 100m
+              memory: 256Mi	

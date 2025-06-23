@@ -1,0 +1,9 @@
+
+# initialize go so it can build
+go mod init hello-world
+
+# run locally
+docker run -p 8080:8080 hello-go
+
+# add tagged go library to go.mod
+go get github.com/your-org/go-lib-common@v0.2.0

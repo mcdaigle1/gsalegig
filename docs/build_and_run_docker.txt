@@ -1,0 +1,36 @@
+
+docker context ls
+# if not default
+	docker context use default
+	
+vi ~/.docker/config.json
+# if there is a line that reads: credsStore, remove it (and comma at end of previous line)
+
+Set up docker buildx (helps with conflicting O/S versions
+	docker buildx create --use
+
+Build image:
+#	sudo docker build -t my-python-api .
+
+	sudo docker buildx build --platform linux/amd64 -t my-python-api:latest --load .
+
+Run Locally:
+	docker run -d -p 8080:8080 my-python-api
+
+
+aws ecr get-login-password --profile Administrator-450287579526 --region us-east-1 | docker login --username AWS --password-stdin 450287579526.dkr.ecr.us-east-1.amazonaws.com
+
+#############################################
+# Build hello world
+#############################################
+sudo docker buildx build --platform linux/amd64 -t my-python-api:latest --load .
+docker tag my-python-api:latest 450287579526.dkr.ecr.us-east-1.amazonaws.com/hello-world-ecr:aaa_0.0.1
+docker push 450287579526.dkr.ecr.us-east-1.amazonaws.com/hello-world-ecr:aaa_0.0.1
+
+#############################################
+# Build name generator
+#############################################
+sudo docker buildx build --platform linux/amd64 -t name-generator-api:latest --load .
+docker tag name-generator-api:latest 450287579526.dkr.ecr.us-east-1.amazonaws.com/name-generator-ecr:aaa_0.0.1
+docker push 450287579526.dkr.ecr.us-east-1.amazonaws.com/name-generator-ecr:aaa_0.0.1
+
