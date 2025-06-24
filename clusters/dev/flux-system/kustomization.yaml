@@ -3,7 +3,4 @@ kind: Kustomization
 resources:
   - gotk-components.yaml
   - gotk-sync.yaml
-  - monitoring-base-kustomization.yaml
-  - monitoring-service-monitors-kustomization.yaml
   - ../../../environments/dev/gsalegig
-  - # ../../../environments/dev/name-generator
