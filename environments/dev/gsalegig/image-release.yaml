@@ -17,7 +17,7 @@ spec:
   values:
     image:
       repository: 450287579526.dkr.ecr.us-west-1.amazonaws.com/dev/gsalegig-api
-      tag: 450287579526.dkr.ecr.us-west-1.amazonaws.com/dev/gsalegig-api:20250611172639 # {"$imagepolicy": "flux-system:gsalegig-api"}
+      tag: "20250611172639" # {"$imagepolicy": "flux-system:gsalegig-api"}
     service:
       type: LoadBalancer
       port: 80
