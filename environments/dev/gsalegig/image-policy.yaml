@@ -13,3 +13,5 @@ spec:
       order: asc
   filterTags:
     pattern: '^[0-9]{14}$' 
+  output:
+    format: tag
