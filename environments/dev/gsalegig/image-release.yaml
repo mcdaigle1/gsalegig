@@ -9,7 +9,7 @@ spec:
   interval: 1m
   chart:
     spec:
-      chart: services/gsalegig/helm
+      chart: services/gsalegig-api/helm
       sourceRef:
         kind: GitRepository
         name: flux-system
