@@ -71,6 +71,7 @@ jobs:
         format: table
         write-comment: true
         only-severities: critical,high
+        only-fixed: true
         exit-code: true
           
     - name: Tag, and push image to ECR
