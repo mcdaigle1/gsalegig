@@ -19,11 +19,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: 1.24
-
 # for troubleshooting oidc issues
 #    - name: Get GitHub OIDC Token Claims
 #      id: id_token
@@ -63,13 +58,13 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: dev/gsalegig-api
       run: |
-        docker build -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ env.IMAGE_TAG }} services/gsalegig-api/app
+        docker build -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ env.IMAGE_TAG }} services/gsalegig-api
         
     - name: Docker Scout CVE Scan
       uses: docker/scout-action@v1
       with:
         command: cves
-        image: ${{ steps.login-ecr.outputs.registry }}/gsalegig-api:${{ env.IMAGE_TAG }}
+        image: ${{ steps.login-ecr.outputs.registry }}/dev/gsalegig-api:${{ env.IMAGE_TAG }}
         dockerhub-user: ${{ secrets.DOCKER_USERNAME }}
         dockerhub-password: ${{ secrets.DOCKER_PASSWORD }}
         summary: true
