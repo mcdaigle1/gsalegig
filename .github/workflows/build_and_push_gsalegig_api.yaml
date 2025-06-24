@@ -5,7 +5,7 @@ on:
   # push:
   #   branches: [main]
   #   paths:                  # files that the action watches
-  #     - services/issue-manager-api/**
+  #     - services/gsalegig-api/**
 
 permissions:
   id-token: write
@@ -61,15 +61,15 @@ jobs:
     - name: Build image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: issue-manager-api
+        ECR_REPOSITORY: dev/gsalegig-api
       run: |
-        docker build -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ env.IMAGE_TAG }} services/issue-manager-api/app
+        docker build -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ env.IMAGE_TAG }} services/gsalegig-api/app
         
     - name: Docker Scout CVE Scan
       uses: docker/scout-action@v1
       with:
         command: cves
-        image: ${{ steps.login-ecr.outputs.registry }}/issue-manager-api:${{ env.IMAGE_TAG }}
+        image: ${{ steps.login-ecr.outputs.registry }}/gsalegig-api:${{ env.IMAGE_TAG }}
         dockerhub-user: ${{ secrets.DOCKER_USERNAME }}
         dockerhub-password: ${{ secrets.DOCKER_PASSWORD }}
         summary: true
@@ -81,7 +81,7 @@ jobs:
     - name: Tag, and push image to ECR
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: issue-manager-api
+        ECR_REPOSITORY: dev/gsalegig-api
       run: |
         docker tag ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ env.IMAGE_TAG }} ${ECR_REGISTRY}/${ECR_REPOSITORY}:LATEST
         docker tag ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ env.IMAGE_TAG }} ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ env.GITHUB_SHA }}
@@ -104,4 +104,4 @@ jobs:
           subject: GitHub Action Failed
           to: mcdaigle1@gmail.com
           from: GitHub Action <mcdaigle1@gmail.com>
-          body: The Build and Push FE to ECR workflow run failed.
+          body: The Build and Push gsalegig api to ECR workflow run failed.
