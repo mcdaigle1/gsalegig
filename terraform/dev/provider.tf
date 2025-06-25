@@ -8,8 +8,12 @@ terraform {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 5.44"
-     }
+    }
   }
 
   required_version = ">= 1.3"
+}
+
+provider "kubernetes" {
+  config_path = var.kubeconfig_path
 }

@@ -1,0 +1,107 @@
+name: Build and Push FE to ECR
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+  #   paths:                  # files that the action watches
+  #     - services/issue-manager-api/**
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest     # Use the latest Ubuntu runner
+
+    steps:    
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: 1.24
+
+# for troubleshooting oidc issues
+#    - name: Get GitHub OIDC Token Claims
+#      id: id_token
+#      uses: actions/github-script@v7
+#      with:
+#        script: |
+#          const token = await core.getIDToken();
+#          core.setOutput("id_token", token);
+#      env:
+#        ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#
+#    - name: Print OIDC Token Claims
+#      run: |
+#        echo "${{ steps.id_token.outputs.id_token }}" | jq -R 'split(".") | .[1] | @base64d | fromjson'
+
+    - name: Configure AWS credentials (OIDC)
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        role-to-assume: arn:aws:iam::450287579526:role/github-actions-ecr-push
+        role-session-name: github-actions
+        aws-region: us-west-1
+
+    - name: Log in to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+      
+    - name: Generate image tag
+      shell: bash
+      run: echo "IMAGE_TAG=$(date -u +%Y%m%d%H%M%S)" >> $GITHUB_ENV
+
+    - name: Generate github sha 
+      shell: bash
+      run: echo "GITHUB_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+    - name: Build image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: issue-manager-api
+      run: |
+        docker build -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ env.IMAGE_TAG }} services/issue-manager-api/app
+        
+    - name: Docker Scout CVE Scan
+      uses: docker/scout-action@v1
+      with:
+        command: cves
+        image: ${{ steps.login-ecr.outputs.registry }}/issue-manager-api:${{ env.IMAGE_TAG }}
+        dockerhub-user: ${{ secrets.DOCKER_USERNAME }}
+        dockerhub-password: ${{ secrets.DOCKER_PASSWORD }}
+        summary: true
+        format: table
+        write-comment: true
+        only-severities: critical,high
+        exit-code: true
+          
+    - name: Tag, and push image to ECR
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: issue-manager-api
+      run: |
+        docker tag ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ env.IMAGE_TAG }} ${ECR_REGISTRY}/${ECR_REPOSITORY}:LATEST
+        docker tag ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ env.IMAGE_TAG }} ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ env.GITHUB_SHA }}
+        docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ env.IMAGE_TAG }}
+        docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ env.GITHUB_SHA }}
+        docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:LATEST
+
+  notify:
+    needs: deploy
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send failure email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: GitHub Action Failed
+          to: mcdaigle1@gmail.com
+          from: GitHub Action <mcdaigle1@gmail.com>
+          body: The Build and Push FE to ECR workflow run failed.
