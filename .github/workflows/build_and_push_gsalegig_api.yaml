@@ -2,10 +2,10 @@ name: Build and Push FE to ECR
 
 on:
   workflow_dispatch:
-  # push:
-  #   branches: [main]
-  #   paths:                  # files that the action watches
-  #     - services/gsalegig-api/**
+  push:
+    branches: [main]
+    paths:                  # files that the action watches
+      - services/gsalegig-api/**
 
 permissions:
   id-token: write
