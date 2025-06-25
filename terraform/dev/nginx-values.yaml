@@ -7,3 +7,7 @@ controller:
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "10254"
+  extraArgs:
+    enable-prometheus-metrics: "true"
+    metrics-per-host: "true"
+    metrics-per-ingress: "true"
