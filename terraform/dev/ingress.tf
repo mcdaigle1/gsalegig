@@ -5,7 +5,7 @@ resource "helm_release" "nginx_ingress" {
 
   repository = "https://kubernetes.github.io/ingress-nginx"
   chart      = "ingress-nginx"
-  version    = "4.10.1" # use latest compatible with your k8s
+  version    = "4.12.3" # use latest compatible with your k8s
 
   values = nginx-values.yaml
 }
