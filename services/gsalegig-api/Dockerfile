@@ -25,7 +25,7 @@ RUN python3 -m pip install --upgrade pip setuptools wheel requests
 RUN python3 -m pip install --no-cache-dir -r requirements.txt
 
 # Step 6: Copy the rest of the application code to the container
-COPY . /app
+COPY . .
 
 # Step 7: Expose the port on which the API will run
 EXPOSE 8080
