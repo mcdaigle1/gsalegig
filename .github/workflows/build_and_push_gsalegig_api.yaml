@@ -99,7 +99,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         repository: mcdaigle1/gitops
-        token: ${{ secrets.processors-access-token }}
+        token: ${{ secrets.PROCESSORS_ACCESS_TOKEN }}
         path: gitops-repo
 
     - name: Update values.yaml with new image tag
