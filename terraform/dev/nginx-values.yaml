@@ -10,6 +10,5 @@ controller:
     serviceMonitor:
       enabled: true
   extraArgs:
-    enable-prometheus-metrics: "true"
     metrics-per-host: "true"
     metrics-per-ingress: "true"
