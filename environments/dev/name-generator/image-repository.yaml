@@ -1,9 +1,0 @@
-apiVersion: image.toolkit.fluxcd.io/v1beta2
-kind: ImageRepository
-metadata:
-  name: name-generator
-  namespace: flux-system
-spec:
-  image: 450287579526.dkr.ecr.us-west-1.amazonaws.com/name-generator-ecr
-  interval: 1m
-  provider: aws
