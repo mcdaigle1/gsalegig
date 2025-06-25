@@ -8,3 +8,4 @@ resource "helm_release" "nginx_ingress" {
   version    = "4.12.3" # use latest compatible with your k8s
 
   values = [file("${path.module}/nginx-values.yaml")]
+}
