@@ -44,10 +44,18 @@ jobs:
     - name: Log in to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Generate new semver tag
+      id: semver
+      uses: mathieudutour/github-tag-action@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        release_branches: main
+        default_bump: patch
       
-    - name: Generate image tag
-      shell: bash
-      run: echo "IMAGE_TAG=$(date -u +%Y%m%d%H%M%S)" >> $GITHUB_ENV
+    # - name: Generate image tag
+    #   shell: bash
+    #   run: echo "IMAGE_TAG=$(date -u +%Y%m%d%H%M%S)" >> $GITHUB_ENV
 
     - name: Generate github sha 
       shell: bash
@@ -58,13 +66,13 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: dev/gsalegig-api
       run: |
-        docker build -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ env.IMAGE_TAG }} services/gsalegig-api
+        docker build -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ steps.semver.outputs.new_tag }} services/gsalegig-api
         
     - name: Docker Scout CVE Scan
       uses: docker/scout-action@v1
       with:
         command: cves
-        image: ${{ steps.login-ecr.outputs.registry }}/dev/gsalegig-api:${{ env.IMAGE_TAG }}
+        image: ${{ steps.login-ecr.outputs.registry }}/dev/gsalegig-api:${{ steps.semver.outputs.new_tag }}
         dockerhub-user: ${{ secrets.DOCKER_USERNAME }}
         dockerhub-password: ${{ secrets.DOCKER_PASSWORD }}
         summary: true
@@ -79,11 +87,31 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: dev/gsalegig-api
       run: |
-        docker tag ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ env.IMAGE_TAG }} ${ECR_REGISTRY}/${ECR_REPOSITORY}:LATEST
-        docker tag ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ env.IMAGE_TAG }} ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ env.GITHUB_SHA }}
-        docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ env.IMAGE_TAG }}
+        docker tag ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ steps.semver.outputs.new_tag }} ${ECR_REGISTRY}/${ECR_REPOSITORY}:LATEST
+        docker tag ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ steps.semver.outputs.new_tag }} ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ env.GITHUB_SHA }}
+        docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ steps.semver.outputs.new_tag }}
         docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ env.GITHUB_SHA }}
         docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:LATEST
+
+    - name: Checkout GitOps repo
+      uses: actions/checkout@v4
+      with:
+        repository: mcdaigle1/gitops
+        token: ${{ secrets.GITOPS_REPO_PAT }}
+        path: gitops-repo
+
+    - name: Update values.yaml with new image tag
+      run: |
+        sed -i "s|tag: \".*\"|tag: \"${{ steps.semver.outputs.new_tag }}\"|" gitops-repo/apps/gsalegig/values.yaml
+
+    - name: Commit and push changes to GitOps repo
+      run: |
+        cd gitops-repo
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git add apps/gsalegig/values.yaml
+        git commit -m "Update image tag to ${{ steps.semver.outputs.new_tag }}"
+        git push origin main
 
   notify:
     needs: deploy
