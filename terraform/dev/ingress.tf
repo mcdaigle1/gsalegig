@@ -7,5 +7,4 @@ resource "helm_release" "nginx_ingress" {
   chart      = "ingress-nginx"
   version    = "4.12.3" # use latest compatible with your k8s
 
-  values = nginx-values.yaml
-}
+  values = [file("${path.module}/nginx-values.yaml")]
