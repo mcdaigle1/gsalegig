@@ -15,4 +15,3 @@ controller:
       enabled: true
   extraArgs:
     metrics-per-host: "true"
-    metrics-per-ingress: "true"
