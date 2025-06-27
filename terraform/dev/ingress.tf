@@ -10,5 +10,18 @@ resource "helm_release" "nginx_ingress" {
   wait         = true
   force_update = true
 
+  depends_on = [
+    null_resource.generate_kubeconfig,
+    module.eks
+  ]
+
   values = [file("${path.module}/nginx-values.yaml")]
+}
+
+resource "null_resource" "generate_kubeconfig" {
+  depends_on = [module.eks]
+
+  provisioner "local-exec" {
+    command = "aws eks update-kubeconfig --region ${var.region} --name ${module.eks.cluster_name}"
+  }
 }
