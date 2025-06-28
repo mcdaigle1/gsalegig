@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 resource "aws_opensearch_domain" "jaeger" {
   domain_name           = "jaeger-logs"
   engine_version        = "OpenSearch_2.11"
@@ -17,7 +19,9 @@ resource "aws_opensearch_domain" "jaeger" {
     Version = "2012-10-17"
     Statement = [{
       Effect    = "Allow"
-      Principal = "*"
+      Principal = {
+        AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+      }
       Action    = "es:*"
       Resource  = "arn:aws:es:${var.region}:${data.aws_caller_identity.current.account_id}:domain/jaeger-logs/*"
     }]
