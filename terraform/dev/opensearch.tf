@@ -20,10 +20,10 @@ resource "aws_opensearch_domain" "jaeger" {
     Statement = [{
       Effect    = "Allow"
       Principal = {
-        AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        AWS = aws_iam_role.jaeger_irsa.arn
       }
       Action    = "es:*"
-      Resource  = "arn:aws:es:${var.region}:${data.aws_caller_identity.current.account_id}:domain/jaeger-logs/*"
+      Resource  = "${aws_opensearch_domain.jaeger.arn}/*"
     }]
   })
 
