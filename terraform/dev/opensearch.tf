@@ -1,7 +1,11 @@
 data "aws_caller_identity" "current" {}
 
+locals {
+  opensearch_domain_name = "jaeger-logs"
+}
+
 resource "aws_opensearch_domain" "jaeger" {
-  domain_name           = "jaeger-logs"
+  domain_name           = local.opensearch_domain_name
   engine_version        = "OpenSearch_2.11"
 
   cluster_config {
@@ -23,7 +27,7 @@ resource "aws_opensearch_domain" "jaeger" {
         AWS = aws_iam_role.jaeger_irsa.arn
       }
       Action    = "es:*"
-      Resource  = "${aws_opensearch_domain.jaeger.arn}/*"
+      Resource  = "arn:aws:es:${var.region}:${data.aws_caller_identity.current.account_id}:domain/${local.opensearch_domain_name}/*"
     }]
   })
 
