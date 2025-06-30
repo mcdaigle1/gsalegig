@@ -171,42 +171,42 @@ data "aws_iam_policy_document" "flux_irsa_trust" {
   }
 }
 
-resource "aws_iam_role_policy" "jaeger_opensearch" {
-  name = "JaegerToOpenSearchPolicy"
-  role = aws_iam_role.jaeger_irsa.name
-  policy = jsonencode({
-    "Version": "2012-10-17",
-    "Statement": [
-      {
-        "Effect": "Allow",
-        "Action": [
-          "es:ESHttpPut",
-          "es:ESHttpPost"
-        ],
-        "Resource": "${aws_opensearch_domain.jaeger.arn}/*"
-      }
-    ]
-  })
-}
+# resource "aws_iam_role_policy" "jaeger_opensearch" {
+#   name = "JaegerToOpenSearchPolicy"
+#   role = aws_iam_role.jaeger_irsa.name
+#   policy = jsonencode({
+#     "Version": "2012-10-17",
+#     "Statement": [
+#       {
+#         "Effect": "Allow",
+#         "Action": [
+#           "es:ESHttpPut",
+#           "es:ESHttpPost"
+#         ],
+#         "Resource": "${aws_opensearch_domain.jaeger.arn}/*"
+#       }
+#     ]
+#   })
+# }
 
-resource "aws_iam_role" "jaeger_irsa" {
-  name = "jaeger-irsa-role"
+# resource "aws_iam_role" "jaeger_irsa" {
+#   name = "jaeger-irsa-role"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Principal = {
-          Federated = module.eks.oidc_provider_arn
-        },
-        Action = "sts:AssumeRoleWithWebIdentity",
-        Condition = {
-          StringEquals = {
-            "${replace(module.eks.oidc_provider, "https://", "")}:sub" = "system:serviceaccount:monitoring:jaeger"
-          }
-        }
-      }
-    ]
-  })
-}
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Effect = "Allow",
+#         Principal = {
+#           Federated = module.eks.oidc_provider_arn
+#         },
+#         Action = "sts:AssumeRoleWithWebIdentity",
+#         Condition = {
+#           StringEquals = {
+#             "${replace(module.eks.oidc_provider, "https://", "")}:sub" = "system:serviceaccount:monitoring:jaeger"
+#           }
+#         }
+#       }
+#     ]
+#   })
+# }
