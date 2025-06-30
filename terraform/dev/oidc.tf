@@ -5,4 +5,3 @@
 
 #   thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"] # GitHub root cert thumbprint
 # }
-
