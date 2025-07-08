@@ -83,7 +83,9 @@ jobs:
         only-severities: critical,high
         only-fixed: true
         exit-code: true
-          
+
+    # tagging and pushing locally is slower than grabbing the digest and manifest from ECR and tagging 
+    # remotely, but this is cleaner in the code
     - name: Tag, and push image to ECR
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -104,14 +106,14 @@ jobs:
 
     - name: Update values.yaml with new image tag
       run: |
-        sed -i "s|tag: \".*\"|tag: \"${{ steps.semver.outputs.new_tag }}\"|" gitops-repo/apps/gsalegig/values.yaml
+        sed -i "s|tag: \".*\"|tag: \"${{ steps.semver.outputs.new_tag }}\"|" gitops-repo/apps/gsalegig/dev/values.yaml
 
     - name: Commit and push changes to GitOps repo
       run: |
         cd gitops-repo
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
-        git add apps/gsalegig/values.yaml
+        git add apps/gsalegig/dev/values.yaml
         git commit -m "Update image tag to ${{ steps.semver.outputs.new_tag }}"
         git push origin main
 
