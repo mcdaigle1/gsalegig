@@ -1,4 +1,4 @@
-name: Build and Push FE to ECR
+name: Build and Push API to ECR
 
 on:
   workflow_dispatch:
