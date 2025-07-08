@@ -86,4 +86,8 @@ resource "kubernetes_config_map" "jaeger_config" {
   data = {
     OPENSEARCH_URL = aws_opensearch_domain.jaeger.endpoint
   }
+
+  depends_on = [
+    null_resource.generate_kubeconfig
+  ]
 }

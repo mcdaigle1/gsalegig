@@ -26,3 +26,11 @@ module "eks" {
     Environment = "dev"
   }
 }
+
+resource "null_resource" "generate_kubeconfig" {
+  depends_on = [module.eks]
+
+  provisioner "local-exec" {
+    command = "aws eks update-kubeconfig --region ${var.region} --name ${module.eks.cluster_name}"
+  }
+}

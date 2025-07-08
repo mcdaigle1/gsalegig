@@ -28,33 +28,37 @@ resource "aws_security_group" "gsalegig_rds" {
   }
 }
 
-resource "aws_secretsmanager_secret" "gsalegig_aurora_master" {
+data "aws_secretsmanager_secret" "gsalegig_aurora_master" {
   name = "/dev/gsalegig/aurora/master"
+}
+
+data "aws_secretsmanager_secret_version" "gsalegig_aurora_master" {
+  secret_id = data.aws_secretsmanager_secret.gsalegig_aurora_master.id
 }
 
 resource "aws_rds_cluster" "gsalegig_aurora" {
   cluster_identifier      = "gsalegig-aurora-cluster"
   engine                  = "aurora-mysql"
   engine_version          = "5.7.mysql_aurora.2.11.2"
-  master_username = jsondecode(aws_secretsmanager_secret_version.gsalegig_aurora_master.secret_string)["master_username"]
-  master_password = jsondecode(aws_secretsmanager_secret_version.gsalegig_aurora_master.secret_string)["master_password"]
+  master_username = jsondecode(data.aws_secretsmanager_secret_version.gsalegig_aurora_master.secret_string)["master_username"]
+  master_password = jsondecode(data.aws_secretsmanager_secret_version.gsalegig_aurora_master.secret_string)["master_password"]
   database_name           = "gsalegig"
   db_subnet_group_name    = aws_db_subnet_group.aurora.name
-  vpc_security_group_ids  = [aws_security_group.db.id]
+  vpc_security_group_ids  = [aws_security_group.gsalegig_rds.id]
   skip_final_snapshot     = true
 }
 
 resource "aws_rds_cluster_instance" "aurora_instances" {
   count              = 2
   identifier         = "aurora-instance-${count.index + 1}"
-  cluster_identifier = aws_rds_cluster.aurora.id
+  cluster_identifier = aws_rds_cluster.gsalegig_aurora.id
   instance_class     = "db.r6g.large"
-  engine             = aws_rds_cluster.aurora.engine
-  engine_version     = aws_rds_cluster.aurora.engine_version
+  engine             = aws_rds_cluster.gsalegig_aurora.engine
+  engine_version     = aws_rds_cluster.gsalegig_aurora.engine_version
   publicly_accessible = false
 }
 
 resource "aws_db_subnet_group" "aurora" {
   name       = "aurora-subnet-group"
-  subnet_ids = [aws_subnet.gsalegig_private_subnet[0], aws_subnet.gsalegig_private_subnet[1]]
+  subnet_ids = [aws_subnet.gsalegig_private_subnet[0].id, aws_subnet.gsalegig_private_subnet[1].id]
 }
