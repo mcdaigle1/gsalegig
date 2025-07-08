@@ -3,7 +3,7 @@ data "aws_route53_zone" "gsalegig" {
 }
 
 resource "aws_route53_record" "api_cname" {
-  zone_id = aws_route53_zone.gsalegig.id
+  zone_id = data.aws_route53_zone.gsalegig.id
   name    = "api.gsalegig.com"
   type    = "CNAME"
   ttl     = 300
