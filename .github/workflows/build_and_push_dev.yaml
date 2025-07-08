@@ -1,4 +1,4 @@
-name: Build and Push FE to ECR
+name: Build and Push API to ECR
 
 on:
   workflow_dispatch:
@@ -70,7 +70,7 @@ jobs:
       uses: docker/scout-action@v1
       with:
         command: cves
-        image: ${{ steps.login-ecr.outputs.registry }}/dev/gsalegig-api:${{ steps.semver.outputs.new_tag }}
+        image: ${{ steps.login-ecr.outputs.registry }}/gsalegig-api:${{ steps.semver.outputs.new_tag }}
         dockerhub-user: ${{ secrets.DOCKER_USERNAME }}
         dockerhub-password: ${{ secrets.DOCKER_PASSWORD }}
         summary: true
