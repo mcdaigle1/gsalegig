@@ -77,6 +77,12 @@ resource "aws_opensearch_domain" "jaeger" {
   }
 }
 
+resource "kubernetes_namespace" "monitoring" {
+  metadata {
+    name = "monitoring"
+  }
+}
+
 resource "kubernetes_config_map" "jaeger_config" {
   metadata {
     name      = "jaeger-opensearch"
@@ -88,6 +94,7 @@ resource "kubernetes_config_map" "jaeger_config" {
   }
 
   depends_on = [
-    null_resource.generate_kubeconfig
+    null_resource.generate_kubeconfig,
+    kubernetes_namespace.monitoring
   ]
 }
