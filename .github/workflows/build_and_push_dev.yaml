@@ -54,10 +54,6 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         release_branches: main
         default_bump: patch
-      
-    # - name: Generate image tag
-    #   shell: bash
-    #   run: echo "IMAGE_TAG=$(date -u +%Y%m%d%H%M%S)" >> $GITHUB_ENV
 
     - name: Generate github sha 
       shell: bash
@@ -66,7 +62,7 @@ jobs:
     - name: Build image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: dev/gsalegig-api
+        ECR_REPOSITORY: gsalegig-api
       run: |
         docker build -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ steps.semver.outputs.new_tag }} services/gsalegig-api
         
@@ -89,7 +85,7 @@ jobs:
     - name: Tag, and push image to ECR
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: dev/gsalegig-api
+        ECR_REPOSITORY: gsalegig-api
       run: |
         docker tag ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ steps.semver.outputs.new_tag }} ${ECR_REGISTRY}/${ECR_REPOSITORY}:LATEST
         docker tag ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ steps.semver.outputs.new_tag }} ${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ env.GITHUB_SHA }}
