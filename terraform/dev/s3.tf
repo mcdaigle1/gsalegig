@@ -3,7 +3,7 @@
 
 terraform {
   backend "s3" {
-    bucket         = "com-gsalegig-terraform-state-bucket"
+    bucket         = "gsalegig-terraform-state"
     key            = "dev/terraform.tfstate"
     region         = "us-west-1"
     dynamodb_table = "terraform-locks"

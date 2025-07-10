@@ -94,7 +94,7 @@ resource "kubernetes_config_map" "jaeger_config" {
   }
 
   depends_on = [
-    null_resource.generate_kubeconfig,
+#    null_resource.generate_kubeconfig,
     kubernetes_namespace.monitoring
   ]
 }

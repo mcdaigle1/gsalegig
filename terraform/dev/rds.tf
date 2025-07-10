@@ -28,20 +28,32 @@ resource "aws_security_group" "gsalegig_rds" {
   }
 }
 
-data "aws_secretsmanager_secret" "gsalegig_aurora_master" {
-  name = "/dev/gsalegig/aurora/master"
+# Generate a random password
+resource "random_password" "db_master_password" {
+  length           = 16
+  special          = true
 }
 
-data "aws_secretsmanager_secret_version" "gsalegig_aurora_master" {
-  secret_id = data.aws_secretsmanager_secret.gsalegig_aurora_master.id
+# Create the secret
+resource "aws_secretsmanager_secret" "db_master_credentials" {
+  name = "gsalegig/dev/master-db-credentials"
+}
+
+# Store the generated password in the secret
+resource "aws_secretsmanager_secret_version" "db_master_credentials_version" {
+  secret_id     = aws_secretsmanager_secret.db_master_credentials.id
+  secret_string = jsonencode({
+    master_username = "admin"
+    master_password = random_password.db_master_password.result
+  })
 }
 
 resource "aws_rds_cluster" "gsalegig_aurora" {
   cluster_identifier      = "gsalegig-aurora-cluster"
   engine                  = "aurora-mysql"
   engine_version          = "5.7.mysql_aurora.2.11.2"
-  master_username = jsondecode(data.aws_secretsmanager_secret_version.gsalegig_aurora_master.secret_string)["master_username"]
-  master_password = jsondecode(data.aws_secretsmanager_secret_version.gsalegig_aurora_master.secret_string)["master_password"]
+  master_username         = "admin"
+  master_password         = random_password.db_master_password.result
   database_name           = "gsalegig"
   db_subnet_group_name    = aws_db_subnet_group.aurora.name
   vpc_security_group_ids  = [aws_security_group.gsalegig_rds.id]

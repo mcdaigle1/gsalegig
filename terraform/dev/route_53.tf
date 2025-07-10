@@ -1,11 +1,12 @@
-data "aws_route53_zone" "gsalegig" {
-  name = "gsalegig.com"
+data "aws_route53_zone" "primary" {
+  name         = "gsalegig.com"
+  private_zone = false 
 }
 
 resource "aws_route53_record" "api_cname" {
-  zone_id = data.aws_route53_zone.gsalegig.id
+  zone_id = data.aws_route53_zone.primary.id
   name    = "api.gsalegig.com"
   type    = "CNAME"
   ttl     = 300
-  records = ["a451aba1beded4476b3fadff91dbf950-2089974327.us-west-1.elb.amazonaws.com."]
+  records = [kubernetes_ingress_v1.gsalegig.status.0.load_balancer.0.ingress.0.hostname]
 }

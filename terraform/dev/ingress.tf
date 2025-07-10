@@ -11,9 +11,48 @@ resource "helm_release" "nginx_ingress" {
   force_update = true
 
   depends_on = [
-    null_resource.generate_kubeconfig,
     module.eks
   ]
 
   values = [file("${path.module}/nginx-values.yaml")]
+}
+
+resource "kubernetes_ingress_v1" "gsalegig" {
+  metadata {
+    name      = "gsalegig-ingress"
+    namespace = "default"
+
+    annotations = {
+      "nginx.ingress.kubernetes.io/ssl-redirect" = "false"
+      "nginx.ingress.kubernetes.io/use-regex"    = "false"
+    }
+  }
+
+  spec {
+    ingress_class_name = "nginx"
+
+    rule {
+      host = "api.gsalegig.com"
+
+      http {
+        path {
+          path     = "/"
+          path_type = "Prefix"
+
+          backend {
+            service {
+              name = "gsalegig-api-service"
+              port {
+                number = 80
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  depends_on = [
+    helm_release.nginx_ingress
+  ]
 }
