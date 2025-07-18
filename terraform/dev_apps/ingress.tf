@@ -10,17 +10,13 @@ resource "helm_release" "nginx_ingress" {
   wait         = true
   force_update = true
 
-  depends_on = [
-    module.eks
-  ]
-
   values = [file("${path.module}/nginx-values.yaml")]
 }
 
 resource "kubernetes_ingress_v1" "gsalegig" {
   metadata {
     name      = "gsalegig-ingress"
-    namespace = "default"
+    namespace = "dev"
 
     annotations = {
       "nginx.ingress.kubernetes.io/ssl-redirect" = "false"

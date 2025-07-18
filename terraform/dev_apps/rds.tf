@@ -1,12 +1,12 @@
 # The EKS nodes security group
 locals {
-  eks_node_sg_id = module.eks.node_security_group_id
+  eks_node_sg_id = data.terraform_remote_state.base.outputs.node_security_group_id
 }
 
 resource "aws_security_group" "gsalegig_rds" {
   name        = "rds-aurora-sg"
   description = "Allow access to Aurora from EKS nodes"
-  vpc_id      = aws_vpc.gsalegig_vpc.id
+  vpc_id      = data.terraform_remote_state.base.outputs.vpc_id
 
   ingress {
     description      = "MySQL from EKS nodes"
@@ -32,11 +32,13 @@ resource "aws_security_group" "gsalegig_rds" {
 resource "random_password" "db_master_password" {
   length           = 16
   special          = true
+  override_special = "!#$%^&*()-_=+[]{}<>.?:"
 }
 
 # Create the secret
 resource "aws_secretsmanager_secret" "db_master_credentials" {
   name = "gsalegig/dev/master-db-credentials"
+  recovery_window_in_days = 0
 }
 
 # Store the generated password in the secret
@@ -72,5 +74,5 @@ resource "aws_rds_cluster_instance" "aurora_instances" {
 
 resource "aws_db_subnet_group" "aurora" {
   name       = "aurora-subnet-group"
-  subnet_ids = [aws_subnet.gsalegig_private_subnet[0].id, aws_subnet.gsalegig_private_subnet[1].id]
+  subnet_ids = data.terraform_remote_state.base.outputs.private_subnet_ids
 }

@@ -8,14 +8,14 @@ locals {
 resource "aws_security_group" "opensearch" {
   name        = "opensearch-sg"
   description = "Allow access to OpenSearch from EKS"
-  vpc_id      = aws_vpc.gsalegig_vpc.id
+  vpc_id      = data.terraform_remote_state.base.outputs.vpc_id
 
   ingress {
     description      = "Allow HTTPS from EKS"
     from_port        = 443
     to_port          = 443
     protocol         = "tcp"
-    security_groups  = [module.eks.node_security_group_id]
+    security_groups  = [data.terraform_remote_state.base.outputs.node_security_group_id]
   }
 
   egress {
@@ -46,7 +46,7 @@ resource "aws_opensearch_domain" "jaeger" {
   }
 
   vpc_options {
-    subnet_ids         = [aws_subnet.gsalegig_private_subnet[0].id]
+    subnet_ids         = [data.terraform_remote_state.base.outputs.private_subnet_ids[0]]
     security_group_ids = [aws_security_group.opensearch.id]
   }
 

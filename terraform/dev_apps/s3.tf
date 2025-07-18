@@ -4,9 +4,9 @@
 terraform {
   backend "s3" {
     bucket         = "gsalegig-terraform-state"
-    key            = "dev/terraform.tfstate"
+    key            = "dev/apps/terraform.tfstate"
     region         = "us-west-1"
-    dynamodb_table = "terraform-locks"
+    dynamodb_table = "terraform-apps-locks"
     encrypt        = true
   }
 }
