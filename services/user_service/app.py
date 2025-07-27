@@ -1,12 +1,25 @@
-from flask import Flask
+from shared_utils.config_util import settings 
+from shared_utils.logging_util import configure_logging
+configure_logging(settings.log_level)
+
+import os
+
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from fastapi.logger import logger as fastapi_logger
 from opentelemetry import trace
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.jaeger.thrift import JaegerExporter
-from opentelemetry.instrumentation.flask import FlaskInstrumentor
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from contextlib import asynccontextmanager
 
-import requests
+from shared_utils.migration_util import run_migrations
+from api.user_routes import router as user_router
+from api.found_item_routes import router as found_item_router
+from api.requested_item_routes import router as requested_item_router
 
 # Configure tracer provider with service name
 trace.set_tracer_provider(
@@ -16,30 +29,45 @@ trace.set_tracer_provider(
 )
 
 # Configure Jaeger exporter
-jaeger_exporter = JaegerExporter(
-    agent_host_name="jaeger-agent.monitoring.svc.cluster.local",  
-    agent_port=6831,
+oltp_exporter = OTLPSpanExporter(
+    endpoint="http://localhost:4317"
 )
 
 # Add the exporter to the trace provider
 trace.get_tracer_provider().add_span_processor(
-    BatchSpanProcessor(jaeger_exporter)
+    BatchSpanProcessor(oltp_exporter)
 )
 
-# Initialize the Flask application
-app = Flask(__name__)
-FlaskInstrumentor().instrument_app(app)
+# Initialize the FastApi application
+app = FastAPI()
+FastAPIInstrumentor.instrument_app(app)
 
-# Define a route for the root URL ("/")
-@app.route('/')
-def hello_world():
-    # response = requests.get("http://name-generator-app-service/")
-    # name = response.text
-    
-    # return 'Hello, World!' + name
-    return 'Hello, World!'
+alembic_path = os.path.join(os.path.dirname(__file__), "alembic.ini")
+run_migrations(alembic_path)
 
-# Run the app if this script is executed
-if __name__ == '__main__':
-    # Start the Flask web server
-    app.run(debug=True, port=8080)
+# Redundant assertion in startup, to override anything FastAPI/Uvicorn resets
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    log_level = os.getenv("LOG_LEVEL", settings.log_level)
+    configure_logging(log_level)
+    yield  # App startup complete, continue normal operation
+
+app = FastAPI(lifespan=lifespan)
+
+import logging
+fastapi_logger = logging.getLogger("app")
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    fastapi_logger.error("422 Validation Error at %s", request.url.path)
+    fastapi_logger.error("Request body: %s", await request.body())
+    fastapi_logger.error("Validation errors: %s", exc.errors())
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors()},
+    )
+
+app.include_router(user_router)
+app.include_router(found_item_router)
+app.include_router(requested_item_router)
+

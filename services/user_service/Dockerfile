@@ -31,4 +31,4 @@ COPY . .
 EXPOSE 8080
 
 # Step 8: Define the entry point for Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app", "--workers", "4", "--threads", "4"]
+CMD ["uvicorn", "--host", "0.0.0.0", "--port", "8080", "app:app", "--workers", "4"]

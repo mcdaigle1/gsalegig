@@ -35,7 +35,7 @@ trace.get_tracer_provider().add_span_processor(
     BatchSpanProcessor(otlp_exporter)
 )
 
-# Initialize the Flask application
+# Initialize the FastApi application
 app = FastAPI()
 FastAPIInstrumentor.instrument_app(app)
 
